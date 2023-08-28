@@ -11,7 +11,7 @@ package FitHub;
 public class Home extends javax.swing.JFrame {
     String FirstName;
     String LastName;
-    boolean Gender;
+    boolean Gender= true;
     String DOB;
     double Height;
     double Weight;
@@ -372,6 +372,40 @@ public class Home extends javax.swing.JFrame {
         FirstName = FirstnameInput.getText();
         LastName = LastNameInput.getText();
         int x  = GenderInput.getSelectedIndex();
+        if(x==1)
+            Gender= false;
+        DOB = DOBinput.getDateFormatString();
+        Height = Double.parseDouble(HeightInput.getText());
+        Weight =  Double.parseDouble(WeightInput.getText());
+        PhoneNo = Long.parseLong(PhoneNoInput.getText());
+        email = EmailInput.getText();
+        AddressL1 = AdrL1Input.getText();
+        AddressL2 = AdrL2Input.getText();
+        char[] pass1 = PasswordInput1.getPassword();
+        char[] pass2 = PasswordInput2.getPassword();
+        if(pass1==pass2){
+            for(int i=0;i<pass1.length;i++)
+                Password+=pass1[i];
+        }
+        FirstnameInput.setText("");
+        LastNameInput.setText("");
+        GenderInput.setSelectedItem("Male");
+        DOBinput.cleanup();
+        HeightInput.setText("");
+        WeightInput.setText("");
+        PhoneNoInput.setText("");
+        EmailInput.setText("");
+        AdrL1Input.setText("");
+        AdrL2Input.setText("");
+        PasswordInput1.setText("");
+        PasswordInput2.setText("");
+        System.out.println(FirstName+LastName+DOB+Height+Weight+PhoneNo+email+AddressL1+AddressL2+ Password);
+        if(Gender){
+            System.out.println("Male");
+        }else{
+            System.out.println("Female");
+        }
+        
         
     }//GEN-LAST:event_RegisterActionPerformed
 
