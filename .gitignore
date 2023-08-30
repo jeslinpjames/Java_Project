@@ -1,1 +1,3 @@
-/Fitness_App/target/
+/Fitness_App/target
+API_KEY.env
+/

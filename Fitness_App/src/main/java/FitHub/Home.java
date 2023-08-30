@@ -2,7 +2,20 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
+
 package FitHub;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+
 
 /**
  *
@@ -69,6 +82,7 @@ public class Home extends javax.swing.JFrame {
         jLabel11 = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
         DOBinput = new com.toedter.calendar.JDateChooser();
+        jPanel5 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -332,6 +346,19 @@ public class Home extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Register", jPanel3);
 
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1012, Short.MAX_VALUE)
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 649, Short.MAX_VALUE)
+        );
+
+        jTabbedPane1.addTab("tab2", jPanel5);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -367,13 +394,22 @@ public class Home extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void PasswordInput1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PasswordInput1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_PasswordInput1ActionPerformed
+
+    private void PasswordInput2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PasswordInput2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_PasswordInput2ActionPerformed
+
     private void RegisterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RegisterActionPerformed
         // TODO add your handling code here:
         FirstName = FirstnameInput.getText();
         LastName = LastNameInput.getText();
         int x  = GenderInput.getSelectedIndex();
         if(x==1)
-            Gender= false;
+        Gender= false;
+        String gender;
         DOB = DOBinput.getDateFormatString();
         Height = Double.parseDouble(HeightInput.getText());
         Weight =  Double.parseDouble(WeightInput.getText());
@@ -385,7 +421,7 @@ public class Home extends javax.swing.JFrame {
         char[] pass2 = PasswordInput2.getPassword();
         if(pass1==pass2){
             for(int i=0;i<pass1.length;i++)
-                Password+=pass1[i];
+            Password+=pass1[i];
         }
         FirstnameInput.setText("");
         LastNameInput.setText("");
@@ -402,12 +438,74 @@ public class Home extends javax.swing.JFrame {
         System.out.println(FirstName+LastName+DOB+Height+Weight+PhoneNo+email+AddressL1+AddressL2+ Password);
         if(Gender){
             System.out.println("Male");
+            gender = "male";
         }else{
             System.out.println("Female");
+            gender ="female";
         }
-        
-        
+        String dietPlan = getDietPlanFromChatGPT(FirstName, LastName, gender, DOB, Height, Weight);
+        System.out.println("Diet Plan: " + dietPlan);
     }//GEN-LAST:event_RegisterActionPerformed
+     private String getDietPlanFromChatGPT(String firstName, String lastName, String gender, String dob, double height, double weight) {
+        try {
+            // Load the API key from the environment variable
+            String apiKey = readApiKeyFromFile("D:\\git\\Java_Project\\API_KEY.env");
+
+            // Check if the API key is null or empty
+            if (apiKey == null || apiKey.isEmpty()) {
+                return "API key not found.";
+            }
+
+//            String apiUrl = "https://api.example.com/chatgpt?apiKey=" + apiKey;
+            String apiUrl = "https://api.openai.com/v1/engines/davinci-codex/completions?apiKey="+apiKey;
+
+            URL url = new URL(apiUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            // Calculate age from date of birth
+            LocalDate birthDate = LocalDate.parse(dob, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            int age = Period.between(birthDate, LocalDate.now()).getYears();
+
+            // Create JSON request body with user details
+            String requestBody = String.format(
+                "{\"firstName\":\"%s\",\"lastName\":\"%s\",\"gender\":\"%s\",\"age\":%d,\"height\":%.2f,\"weight\":%.2f}",
+                firstName, lastName, gender, age, height, weight);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = requestBody.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    return response.toString();
+                }
+            } else {
+                return "HTTP error: " + responseCode;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error fetching diet plan.";
+        }
+    }
+
+    private static String readApiKeyFromFile(String filePath) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+                return reader.readLine(); // Read the first line which should be the API key
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null; // Return null if there's an error reading the file
+            }
+        }
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
         // TODO add your handling code here:
@@ -420,14 +518,6 @@ public class Home extends javax.swing.JFrame {
     private void GenderInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GenderInputActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_GenderInputActionPerformed
-
-    private void PasswordInput2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PasswordInput2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_PasswordInput2ActionPerformed
-
-    private void PasswordInput1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PasswordInput1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_PasswordInput1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -462,6 +552,17 @@ public class Home extends javax.swing.JFrame {
                 new Home().setVisible(true);
             }
         });
+        System.out.println("HELLO WORLD!");
+        Home homeInstance = new Home();
+        String firstName = "John";
+        String lastName = "Doe";
+        String gender = "male";
+        String dob = "1990-01-01"; // Replace with an actual date of birth
+        double height = 180.0;
+        double weight = 70.0;
+
+        String dietPlan = homeInstance.getDietPlanFromChatGPT(firstName, lastName, gender, dob, height, weight);
+        System.out.println("Diet Plan: " + dietPlan);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -496,6 +597,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JTabbedPane jTabbedPane1;
     // End of variables declaration//GEN-END:variables
 }
